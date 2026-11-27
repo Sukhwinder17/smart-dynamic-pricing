@@ -339,6 +339,7 @@ def upload_dataset():
         if col in normalized:
             normalized[col] = pd.to_numeric(normalized[col], errors='coerce')
     normalized['season'] = normalized['season'].astype(str).str.strip()
+    normalized['season'] = normalized['season'].replace({'': np.nan, 'nan': np.nan, 'None': np.nan})
     normalized = normalized.replace([np.inf, -np.inf], np.nan)
     normalized = normalized.dropna(subset=required)
     normalized = normalized[(normalized['target_price'] > 0) & (normalized['stock'] >= 0) & (normalized['demand'] >= 0) & (normalized['previous_sales'] >= 0)]
