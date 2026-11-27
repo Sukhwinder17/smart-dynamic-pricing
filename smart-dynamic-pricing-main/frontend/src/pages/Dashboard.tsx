@@ -30,6 +30,8 @@ interface Product {
   name: string
   current_price: number
   stock: number
+  recommended_price?: number
+  recommendation?: string
 }
 interface Segment {
   name: string
@@ -73,6 +75,24 @@ const Dashboard: React.FC = () => {
     baselineHistory: []
   })
   const [episodesToRun, setEpisodesToRun] = useState<number>(100)
+  const [datasetFile, setDatasetFile] = useState<File | null>(null)
+  const [datasetBusy, setDatasetBusy] = useState(false)
+  const [datasetMessage, setDatasetMessage] = useState('')
+  const [datasetError, setDatasetError] = useState('')
+  const [uploadedProducts, setUploadedProducts] = useState<any[]>([])
+
+  const handleDatasetUpload = async () => {
+    if (!datasetFile) { setDatasetError('Choose a CSV file first.'); return }
+    setDatasetBusy(true); setDatasetError(''); setDatasetMessage('')
+    try {
+      const result = await apiClient.uploadDataset(datasetFile)
+      setProducts(result.products || [])
+      setUploadedProducts(result.products || [])
+      setDatasetMessage(`${result.summary.rows_used} valid rows loaded. Regression model trained.`)
+    } catch (err: any) {
+      setDatasetError(err?.response?.data?.message || 'CSV upload failed. Check required columns and backend terminal.')
+    } finally { setDatasetBusy(false) }
+  }
 
   //–– load everything on mount ––
   useEffect(() => {
@@ -197,6 +217,28 @@ const Dashboard: React.FC = () => {
       <Header title="Smart Dynamic Pricing Dashboard" />
 
       <div className="container mx-auto p-4 space-y-6">
+        <Card>
+          <h2 className="text-lg font-semibold mb-2">Train Pricing Model with Your Dataset</h2>
+          <p className="text-sm text-gray-600 mb-3">CSV columns: demand, stock, season, previous_sales, and price or recommended_price. Optional: product_name, competitor_price. Minimum 5 valid rows.</p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input type="file" accept=".csv,text/csv" onChange={(e) => setDatasetFile(e.target.files?.[0] || null)} className="text-sm" />
+            <Button onClick={handleDatasetUpload} disabled={datasetBusy || !datasetFile} variant="primary">
+              {datasetBusy ? 'Training model...' : 'Upload CSV & Train'}
+            </Button>
+          </div>
+          {datasetError && <p className="mt-3 text-sm text-red-600">{datasetError}</p>}
+          {datasetMessage && <p className="mt-3 text-sm text-green-700">{datasetMessage}</p>}
+          {uploadedProducts.length > 0 && (
+            <div className="mt-4 overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead><tr className="text-left border-b"><th className="p-2">Product</th><th className="p-2">Current price</th><th className="p-2">Recommended</th><th className="p-2">Action</th></tr></thead>
+                <tbody>{uploadedProducts.slice(0, 10).map((p, i) => (
+                  <tr key={i} className="border-b"><td className="p-2">{p.name}</td><td className="p-2">{Number(p.current_price).toFixed(2)}</td><td className="p-2">{Number(p.recommended_price).toFixed(2)}</td><td className="p-2">{p.recommendation}</td></tr>
+                ))}</tbody>
+              </table>
+            </div>
+          )}
+        </Card>
         {/* AI Training Control */}
         <Card>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
