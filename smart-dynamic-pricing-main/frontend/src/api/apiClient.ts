@@ -41,6 +41,24 @@ const apiClient = {
   // Generate a fresh random sample
   generateSampleData: () => http.post('/generate_sample_data').then(r => r.data),
 
+  // Upload historical pricing CSV and train regression model
+  uploadDataset: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return http.post('/upload_dataset', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120_000,
+    }).then(r => r.data);
+  },
+
+  // Get dataset import status
+  getDatasetStatus: () => http.get('/dataset_status').then(r => r.data),
+
+  // Predict a recommended price for a single product
+  recommendPrice: (features: {
+    demand: number; stock: number; season: string; previous_sales: number; competitor_price?: number;
+  }) => http.post('/recommend_price', features).then(r => r.data),
+
   // === Training ===
   getTrainingStatus: () => http.get('/training_status').then(r => r.data),
   getTrainingResults: () => http.get('/training_results').then(r => r.data),
