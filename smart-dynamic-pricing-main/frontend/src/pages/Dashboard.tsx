@@ -80,17 +80,20 @@ const Dashboard: React.FC = () => {
   const [datasetMessage, setDatasetMessage] = useState('')
   const [datasetError, setDatasetError] = useState('')
   const [uploadedProducts, setUploadedProducts] = useState<any[]>([])
-  const [priceFeatures, setPriceFeatures] = useState({ demand: '50', stock: '100', season: 'Summer', previous_sales: '40', competitor_price: '' })
+  const [priceFeatures, setPriceFeatures] = useState({ product_name: '', current_price: '', demand: '50', stock: '100', season: 'Summer', previous_sales: '40', competitor_price: '' })
   const [pricePrediction, setPricePrediction] = useState<number | null>(null)
+  const [priceRecommendation, setPriceRecommendation] = useState('')
   const [pricePredictionError, setPricePredictionError] = useState('')
 
   const handleRecommendPrice = async () => {
-    setPricePredictionError(''); setPricePrediction(null)
+    setPricePredictionError(''); setPricePrediction(null); setPriceRecommendation('')
     try {
-      const payload: any = { demand: Number(priceFeatures.demand), stock: Number(priceFeatures.stock), season: priceFeatures.season, previous_sales: Number(priceFeatures.previous_sales) }
+      const payload: any = { product_name: priceFeatures.product_name || 'Product', demand: Number(priceFeatures.demand), stock: Number(priceFeatures.stock), season: priceFeatures.season, previous_sales: Number(priceFeatures.previous_sales) }
+      if (priceFeatures.current_price.trim()) payload.current_price = Number(priceFeatures.current_price)
       if (priceFeatures.competitor_price.trim()) payload.competitor_price = Number(priceFeatures.competitor_price)
       const result = await apiClient.recommendPrice(payload)
       setPricePrediction(Number(result.recommended_price))
+      setPriceRecommendation(result.recommendation || '')
     } catch (err: any) {
       setPricePredictionError(err?.response?.data?.message || 'Could not predict price. Upload and train a CSV first.')
     }
@@ -245,7 +248,9 @@ const Dashboard: React.FC = () => {
           {datasetMessage && <p className="mt-3 text-sm text-green-700">{datasetMessage}</p>}
           <div className="mt-5 border-t pt-4">
             <h3 className="font-semibold mb-3">Get a price recommendation</h3>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <label className="text-xs text-gray-600">Product name<input value={priceFeatures.product_name} onChange={(e) => setPriceFeatures({...priceFeatures, product_name: e.target.value})} className="mt-1 w-full border rounded p-2 text-sm" placeholder="Product" /></label>
+              <label className="text-xs text-gray-600">Current price<input type="number" min="0" value={priceFeatures.current_price} onChange={(e) => setPriceFeatures({...priceFeatures, current_price: e.target.value})} className="mt-1 w-full border rounded p-2 text-sm" /></label>
               <label className="text-xs text-gray-600">Demand<input type="number" min="0" value={priceFeatures.demand} onChange={(e) => setPriceFeatures({...priceFeatures, demand: e.target.value})} className="mt-1 w-full border rounded p-2 text-sm" /></label>
               <label className="text-xs text-gray-600">Stock<input type="number" min="0" value={priceFeatures.stock} onChange={(e) => setPriceFeatures({...priceFeatures, stock: e.target.value})} className="mt-1 w-full border rounded p-2 text-sm" /></label>
               <label className="text-xs text-gray-600">Season<input value={priceFeatures.season} onChange={(e) => setPriceFeatures({...priceFeatures, season: e.target.value})} className="mt-1 w-full border rounded p-2 text-sm" /></label>
@@ -254,7 +259,7 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <Button onClick={handleRecommendPrice} variant="secondary">Predict Recommended Price</Button>
-              {pricePrediction !== null && <span className="font-semibold text-green-700">Recommended price: {pricePrediction.toFixed(2)} (dataset currency)</span>}
+              {pricePrediction !== null && <span className="font-semibold text-green-700">{priceRecommendation}: {pricePrediction.toFixed(2)} (dataset currency)</span>}
             </div>
             {pricePredictionError && <p className="mt-2 text-sm text-red-600">{pricePredictionError}</p>}
           </div>
