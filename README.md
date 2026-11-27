@@ -1,144 +1,62 @@
+# Smart Dynamic Pricing System
 
-# 🧠 Smart Dynamic Pricing System
+AI-powered dynamic pricing dashboard using a Flask API, TensorFlow DQN agent, and React.
 
-A fully modular and production-grade AI-powered pricing engine built using **Deep Reinforcement Learning** to dynamically adjust product prices based on customer behavior, time of day, competition, and market demand.
+## Project layout
 
-<p align="center">
-  <img src="banner.png" alt="Banner" style="width:100%; max-width:900px;" />
-</p>
+The repository contains the backend at `backend/` and the runnable React app at `smart-dynamic-pricing-main/frontend/`.
 
----
+## Windows setup
 
-## 🚀 Project Highlights
+Requirements:
+- Python 3.10 (TensorFlow 2.11 is not compatible with newer Python versions such as 3.11/3.12)
+- Node.js 18 LTS and npm
 
-- 🎯 **Dueling DQN Agent** for stable and efficient learning  
-- 🛒 **Simulated E-commerce Environment** with customer segments, competitor dynamics & time-based pricing  
-- 📊 **Human Baseline Comparisons** (Fixed, Adaptive, Time-based, Combined)  
-- 🌐 **React Dashboard** to visualize product trends, customer segmentation & agent performance  
-- 🔬 **Reward System** to track improvement over human logic  
+### 1. Start the backend
 
----
+Open Command Prompt and run:
 
-## 🧠 Architecture Overview
-
-```
-
-Frontend (React Dashboard)
-↓
-Flask API Server
-↓
-+----------------------+
-\|   Dueling DQN Agent  |
-\|   Reward System      |
-\|   Market Environment |
-+----------------------+
-↓
-Customer Segments, Products, Time-of-Day, Competitor Pricing
-
-```
-
----
-
-## 📂 Project Structure
-
-```
-
-smart-dynamic-pricing/
-│
-├── frontend/               # React + Tailwind dashboard
-│   ├── src/
-│   ├── public/
-│   └── …
-│
-├── backend/                # Flask + DQN model + API
-│   ├── enhanced\_api.py
-│   ├── enhanced\_agent.py
-│   ├── enhanced\_env.py
-│   ├── human\_baseline.py
-│   └── enhanced\_reward\_system.py
-│
-
-└── README.md
-
-````
-
----
-
-## 🛠️ Setup & Installation
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-````
-
-> Runs at `http://localhost:3000/`
-
-### Backend (Flask API)
-
-```bash
-cd backend
+```cmd
+cd /d "%USERPROFILE%\Downloads\smart-dynamic-pricing-main\backend"
+py -3.10 -m venv .venv
+.venv\Scripts\activate
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 python enhanced_api.py
 ```
 
-> Runs at `http://localhost:5000/`
+The API runs at `http://localhost:5000`. Keep this terminal open.
 
-> **Requirements:** Python 3.8+, Node.js 16+
+If you already created the virtual environment, skip the `py -3.10 -m venv .venv` line. Activate it and install requirements again if needed.
 
----
+### 2. Start the frontend
 
-## 📈 Live Dashboard Previews
+Open a **second** Command Prompt window:
 
-<p align="center">
-  <img src="dashboard.png" alt="Dashboard Overview" style="width:80%; max-width:800px;" />
-</p>
+```cmd
+cd /d "%USERPROFILE%\Downloads\smart-dynamic-pricing-main\smart-dynamic-pricing-main\frontend"
+npm install
+npm start
+```
 
-<p align="center">
-  <img src="business_metrics.png" alt="Business Metrics" style="width:80%; max-width:800px;" />
-</p>
+The dashboard opens at `http://localhost:3000`. Keep this terminal open too.
 
----
+The frontend's API client defaults to `http://localhost:5000/api`, so no environment file is required for local development.
 
-## 🧪 How It Works
+## Troubleshooting
 
-1. The agent uses a **Dueling Double DQN** to learn pricing strategies.
-2. The environment simulates:
+- If `py -3.10` is not found, install Python 3.10 and enable the Python Launcher.
+- If the frontend says port 3000 is busy, accept the prompt to use another port.
+- If the backend reports a missing Python package, make sure the backend virtual environment is activated and run `pip install -r requirements.txt` from the backend folder.
+- Do not run `npm install` from the repository root; run it inside `smart-dynamic-pricing-main/frontend`.
 
-   * Time-of-day influence
-   * Customer segment preferences
-   * Competitor price adjustments
-3. The agent is rewarded based on:
+## Features
 
-   * 💰 Profit earned
-   * 📈 Improvement over human baseline strategies
-4. All insights are visualized in a user-friendly React frontend.
+- Dueling Double DQN pricing agent
+- Simulated products, customer segments, competitors, and time-of-day demand
+- Flask endpoints for training, products, segments, pricing curves, and baseline comparisons
+- React dashboard with charts and training controls
 
----
+## License
 
-## 📜 License
-
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-## 🙌 Credits
-
-* **Developers:**  
-  - Lakshit Mundra  
-  - Parth Tripathi  
-  - Arnav Deshmukh  
-
-* **Tech Stack:**
-  - 🧠 TensorFlow (Deep RL)  
-  - ⚙️ Flask (API Backend)  
-  - 🌐 React + Tailwind CSS (Frontend Dashboard)
-
-
----
-
-## 🌟 If you found this helpful, please give it a star!
-
-
+MIT License. See [LICENSE](LICENSE).
