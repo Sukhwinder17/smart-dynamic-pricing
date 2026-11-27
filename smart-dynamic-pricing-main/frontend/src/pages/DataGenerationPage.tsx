@@ -1,124 +1,117 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import apiClient from '../api/apiClient';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import LoadingSpinner from '../components/LoadingSpinner';
 
-const DataGenerationPage: React.FC<{
-  onDataGenerated: () => void;
-}> = ({ onDataGenerated }) => {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+type UploadSummary = {
+  rows_received: number;
+  rows_used: number;
+  features: string[];
+  validation_mae: number | null;
+  validation_r2: number | null;
+};
+
+const DataGenerationPage: React.FC<{ onDataGenerated: () => void }> = ({ onDataGenerated }) => {
+  const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [summary, setSummary] = useState<UploadSummary | null>(null);
   const [dataExists, setDataExists] = useState(false);
 
-  // Check if data already exists
   useEffect(() => {
-    const checkForExistingData = async () => {
-      try {
-        const products = await apiClient.getProducts();
-        if (Array.isArray(products) && products.length > 0) {
-          setDataExists(true);
-        }
-      } catch (err) {
-        console.error('Error checking for existing data:', err);
-        // Don't set error here, just assume no data exists
-      }
-    };
-
-    checkForExistingData();
+    apiClient.getProducts()
+      .then((products: any[]) => setDataExists(Array.isArray(products) && products.length > 0))
+      .catch(() => undefined);
   }, []);
 
-  const handleGenerateData = async () => {
+  const handleUpload = async () => {
+    if (!file) {
+      setError('Select a CSV file first.');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    setMessage('');
     try {
-      setIsGenerating(true);
-      setError(null);
-      
-      const response = await apiClient.generateSampleData();
-      
-      if (response && response.products && response.products.length > 0) {
-        setDataExists(true);
-        // Wait a moment to show the success state before proceeding
-        setTimeout(() => {
-          onDataGenerated();
-        }, 1000);
-      } else {
-        setError('No products returned from the server. Please try again.');
-      }
-    } catch (err) {
-      console.error('Error generating sample data:', err);
-      setError('Failed to generate sample data. Please try again.');
+      const result = await apiClient.uploadDataset(file);
+      setSummary(result.summary);
+      setMessage(result.message || 'Dataset uploaded and model trained.');
+      setDataExists(true);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Upload failed. Check the CSV columns and backend terminal.');
     } finally {
-      setIsGenerating(false);
+      setBusy(false);
     }
   };
 
-  const handleContinue = () => {
-    onDataGenerated();
+  const handleSampleData = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      await apiClient.generateSampleData();
+      setMessage('Demo data generated.');
+      setDataExists(true);
+      setSummary(null);
+    } catch {
+      setError('Could not generate sample data. Check that the backend is running.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <Card className="max-w-lg w-full animate-fade-in shadow-lg">
-        <div className="text-center p-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">
-            Smart Dynamic Pricing System
-          </h1>
-          
-          <div className="mb-8">
-            <div className="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <p className="text-gray-600 mb-4">
-              Welcome to the Smart Dynamic Pricing System! Before you can use the dashboard, you need to generate sample data.
+      <Card className="max-w-2xl w-full shadow-lg">
+        <div className="p-6">
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">AI-Based Dynamic Pricing for E-Commerce</h1>
+          <p className="text-gray-600 mb-6">
+            Upload historical sales data to train a regression model and estimate suitable product prices,
+            or use generated demo data to explore the dashboard.
+          </p>
+
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 mb-5">
+            <h2 className="font-semibold text-blue-900 mb-2">Upload historical dataset (CSV)</h2>
+            <p className="text-sm text-blue-800 mb-3">
+              Required columns: demand, stock, season, previous_sales, and price or recommended_price.
+              Optional: product_name and competitor_price. At least 5 valid rows; maximum 10 MB.
             </p>
-            <p className="text-gray-600 mb-4">
-              This will create product data that the AI will use to optimize pricing strategies.
-            </p>
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              className="block w-full text-sm text-gray-700 mb-3"
+            />
+            {file && <p className="text-sm text-gray-600 mb-3">Selected: {file.name}</p>}
+            <Button onClick={handleUpload} disabled={busy || !file} variant="primary">
+              {busy ? <span className="flex items-center"><LoadingSpinner size="small" /><span className="ml-2">Processing CSV...</span></span> : 'Upload CSV & Train Regression Model'}
+            </Button>
           </div>
-          
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-600">
-              {error}
+
+          <div className="mb-5">
+            <p className="text-sm text-gray-600 mb-3">No dataset? Generate sample products for a demo.</p>
+            <Button onClick={handleSampleData} disabled={busy} variant="secondary">
+              Generate Sample Data
+            </Button>
+          </div>
+
+          {error && <div className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-red-700">{error}</div>}
+          {message && <div className="mb-4 rounded border border-green-200 bg-green-50 p-3 text-green-700">{message}</div>}
+          {summary && (
+            <div className="mb-5 rounded bg-gray-50 p-4 text-sm text-gray-700">
+              <p><strong>Rows:</strong> {summary.rows_used} usable / {summary.rows_received} uploaded</p>
+              <p><strong>Features:</strong> {summary.features.join(', ')}</p>
+              <p><strong>Validation MAE:</strong> {summary.validation_mae == null ? 'Dataset too small for holdout evaluation' : summary.validation_mae}</p>
+              <p><strong>Validation R²:</strong> {summary.validation_r2 == null ? 'Not available' : summary.validation_r2}</p>
             </div>
           )}
-          
-          {dataExists ? (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md text-green-600">
-              Data has been successfully generated! You can now proceed to the dashboard.
-            </div>
-          ) : null}
-          
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            {dataExists ? (
-              <Button 
-                onClick={handleContinue}
-                variant="primary"
-                size="large"
-                className="w-full sm:w-auto"
-              >
-                Continue to Dashboard
-              </Button>
-            ) : (
-              <Button 
-                onClick={handleGenerateData}
-                disabled={isGenerating}
-                variant="primary"
-                size="large"
-                className="w-full sm:w-auto"
-              >
-                {isGenerating ? (
-                  <span className="flex items-center justify-center">
-                    <LoadingSpinner size="small" />
-                    <span className="ml-2">Generating...</span>
-                  </span>
-                ) : (
-                  'Generate Sample Data'
-                )}
-              </Button>
-            )}
-          </div>
+
+          {dataExists && (
+            <Button onClick={onDataGenerated} variant="primary" size="large">
+              Continue to Dashboard
+            </Button>
+          )}
         </div>
       </Card>
     </div>
