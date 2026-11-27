@@ -1,0 +1,13 @@
+product_name,price,recommended_price,demand,stock,season,previous_sales,competitor_price
+Premium Headphones,120,124,45,80,Winter,38,118
+Premium Headphones,120,117,22,140,Summer,20,119
+Premium Headphones,120,126,58,45,Festival,51,121
+Wireless Keyboard,80,82,60,100,Winter,55,78
+Wireless Keyboard,80,76,28,180,Summer,31,79
+Wireless Keyboard,80,85,72,55,Festival,68,83
+Smart Watch,150,155,35,60,Winter,30,148
+Smart Watch,150,145,18,160,Summer,21,152
+Smart Watch,150,158,49,40,Festival,44,151
+Bluetooth Speaker,65,67,55,120,Winter,49,64
+Bluetooth Speaker,65,62,24,200,Summer,27,66
+Bluetooth Speaker,65,70,68,65,Festival,61,67
