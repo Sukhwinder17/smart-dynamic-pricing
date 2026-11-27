@@ -76,6 +76,7 @@ const DataGenerationPage: React.FC<{ onDataGenerated: () => void }> = ({ onDataG
             <p className="text-sm text-blue-800 mb-3">
               Required columns: demand, stock, season, previous_sales, and price or recommended_price.
               Optional: product_name and competitor_price. At least 5 valid rows; maximum 10 MB.
+              <a className="ml-1 text-blue-600 underline" href="https://raw.githubusercontent.com/Sukhwinder17/smart-dynamic-pricing/main/backend/sample_pricing_dataset.csv">Download sample CSV</a>
             </p>
             <input
               type="file"
