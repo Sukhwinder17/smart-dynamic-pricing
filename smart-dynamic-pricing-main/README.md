@@ -1,144 +1,67 @@
+# AI-Based Dynamic Pricing Website for E-Commerce
 
-# 🧠 Smart Dynamic Pricing System
+A web prototype for e-commerce price recommendations. It uses a **Random Forest regression model** trained on historical pricing data uploaded as CSV, with a Flask API and React dashboard.
 
-A fully modular and production-grade AI-powered pricing engine built using **Deep Reinforcement Learning** to dynamically adjust product prices based on customer behavior, time of day, competition, and market demand.
+## Features
 
-<p align="center">
-  <img src="banner.png" alt="Banner" style="width:100%; max-width:900px;" />
-</p>
+- Upload and validate historical pricing CSV data
+- Clean missing/invalid rows and preprocess seasonal categories
+- Train a regression model to estimate a target/recommended price
+- Evaluate the model with validation MAE and R² when the dataset is large enough
+- View current and recommended prices for imported products
+- Enter demand, stock, season and previous sales to predict a price for a single product
+- Dashboard charts for product performance, customer segments, demand/revenue and pricing trends
+- Optional simulated DQN training environment retained for experimentation; it is separate from the uploaded-data regression workflow
 
----
+## Dataset upload
 
-## 🚀 Project Highlights
+Use the dashboard's **Upload CSV & Train** area. The CSV needs at least 5 valid rows and should contain:
 
-- 🎯 **Dueling DQN Agent** for stable and efficient learning  
-- 🛒 **Simulated E-commerce Environment** with customer segments, competitor dynamics & time-based pricing  
-- 📊 **Human Baseline Comparisons** (Fixed, Adaptive, Time-based, Combined)  
-- 🌐 **React Dashboard** to visualize product trends, customer segmentation & agent performance  
-- 🔬 **Reward System** to track improvement over human logic  
+Required columns:
+- `demand`
+- `stock`
+- `season`
+- `previous_sales`
+- `recommended_price` or `target_price` (the target the model learns)
 
----
+If no target column is present, `price` is used as the target. Common aliases such as `quantity_sold`, `inventory`, `historical_sales`, `current_price`, and `optimal_price` are accepted.
 
-## 🧠 Architecture Overview
+Optional columns:
+- `product_name`
+- `price` (current price shown beside the recommendation)
+- `competitor_price`
 
-```
+A synthetic example file is included at [backend/sample_pricing_dataset.csv](backend/sample_pricing_dataset.csv). It is for testing only, not real business data.
 
-Frontend (React Dashboard)
-↓
-Flask API Server
-↓
-+----------------------+
-\|   Dueling DQN Agent  |
-\|   Reward System      |
-\|   Market Environment |
-+----------------------+
-↓
-Customer Segments, Products, Time-of-Day, Competitor Pricing
+## Windows setup
 
-```
+Requirements: Python 3.10, Node.js 18 LTS, and npm.
 
----
+### Backend — first CMD window
 
-## 📂 Project Structure
-
-```
-
-smart-dynamic-pricing/
-│
-├── frontend/               # React + Tailwind dashboard
-│   ├── src/
-│   ├── public/
-│   └── …
-│
-├── backend/                # Flask + DQN model + API
-│   ├── enhanced\_api.py
-│   ├── enhanced\_agent.py
-│   ├── enhanced\_env.py
-│   ├── human\_baseline.py
-│   └── enhanced\_reward\_system.py
-│
-
-└── README.md
-
-````
-
----
-
-## 🛠️ Setup & Installation
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-````
-
-> Runs at `http://localhost:3000/`
-
-### Backend (Flask API)
-
-```bash
-cd backend
+```cmd
+cd /d "%USERPROFILE%\Downloads\smart-dynamic-pricing-main\backend"
+if not exist .venv\Scripts\python.exe py -3.10 -m venv .venv
+.venv\Scripts\activate
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 python enhanced_api.py
 ```
 
-> Runs at `http://localhost:5000/`
+Backend API: http://localhost:5000/api
 
-> **Requirements:** Python 3.8+, Node.js 16+
+### Frontend — second CMD window
 
----
+```cmd
+cd /d "%USERPROFILE%\Downloads\smart-dynamic-pricing-main\smart-dynamic-pricing-main\frontend"
+npm install
+npm start
+```
 
-## 📈 Live Dashboard Previews
+Dashboard: http://localhost:3000
 
-<p align="center">
-  <img src="dashboard.png" alt="Dashboard Overview" style="width:80%; max-width:800px;" />
-</p>
+Keep both terminals open. Upload a CSV in the dashboard to train the regression model before using the single-product price predictor.
 
-<p align="center">
-  <img src="business_metrics.png" alt="Business Metrics" style="width:80%; max-width:800px;" />
-</p>
+## Main technologies
 
----
-
-## 🧪 How It Works
-
-1. The agent uses a **Dueling Double DQN** to learn pricing strategies.
-2. The environment simulates:
-
-   * Time-of-day influence
-   * Customer segment preferences
-   * Competitor price adjustments
-3. The agent is rewarded based on:
-
-   * 💰 Profit earned
-   * 📈 Improvement over human baseline strategies
-4. All insights are visualized in a user-friendly React frontend.
-
----
-
-## 📜 License
-
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-## 🙌 Credits
-
-* **Developers:**  
-  - Lakshit Mundra  
-  - Parth Tripathi  
-  - Arnav Deshmukh  
-
-* **Tech Stack:**
-  - 🧠 TensorFlow (Deep RL)  
-  - ⚙️ Flask (API Backend)  
-  - 🌐 React + Tailwind CSS (Frontend Dashboard)
-
-
----
-
-## 🌟 If you found this helpful, please give it a star!
-
-
+Python, Flask, pandas, NumPy, scikit-learn, React, TypeScript, Chart.js.
