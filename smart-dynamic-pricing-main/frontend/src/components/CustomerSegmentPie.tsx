@@ -1,139 +1,68 @@
-// src/components/CustomerRetentionChart.tsx
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
+  ArcElement,
   Tooltip,
   Legend,
   ChartOptions,
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { Pie } from 'react-chartjs-2';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(ArcElement, Tooltip, Legend);
 
-type CustomerRetentionChartProps = {
-  data?: {
-    months: string[];
-    retention: number[];
-  };
+type Segment = {
+  name: string;
+  percentage: number;
 };
 
-const CustomerRetentionChart: React.FC<CustomerRetentionChartProps> = ({
-  data,
-}) => {
-  const [chartData, setChartData] = useState<{
-    labels: string[];
-    datasets: {
-      label: string;
-      data: number[];
-      fill: boolean;
-      tension: number;
-      borderWidth: number;
-      pointRadius: number;
-      backgroundColor: string;
-      borderColor: string;
-    }[];
-  }>({
-    labels: [],
+type CustomerSegmentPieProps = {
+  data: Segment[];
+};
+
+const options: ChartOptions<'pie'> = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { position: 'right' },
+    tooltip: {
+      callbacks: {
+        label: (context) => {
+          const value = Number(context.parsed) || 0;
+          return `${context.label}: ${value.toFixed(1)}%`;
+        },
+      },
+    },
+  },
+};
+
+const CustomerSegmentPie: React.FC<CustomerSegmentPieProps> = ({ data }) => {
+  const chartData = {
+    labels: data.map((segment) => segment.name),
     datasets: [
       {
-        label: 'Customer Retention (%)',
-        data: [],
-        fill: true,
-        tension: 0.4,
-        borderWidth: 2,
-        pointRadius: 3,
-        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-        borderColor: 'rgba(54, 162, 235, 1)',
+        label: 'Customer segment share',
+        data: data.map((segment) => segment.percentage),
+        backgroundColor: [
+          'rgba(54, 162, 235, 0.75)',
+          'rgba(255, 99, 132, 0.75)',
+          'rgba(255, 206, 86, 0.75)',
+          'rgba(75, 192, 192, 0.75)',
+          'rgba(153, 102, 255, 0.75)',
+        ],
+        borderWidth: 1,
       },
     ],
-  });
-
-  useEffect(() => {
-    const months = data?.months ?? [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-    ];
-
-    const retention = data?.retention ?? [95, 92, 88, 90, 93, 95];
-
-    setChartData({
-      labels: months,
-      datasets: [
-        {
-          label: 'Customer Retention (%)',
-          data: retention,
-          fill: true,
-          tension: 0.4,
-          borderWidth: 2,
-          pointRadius: 3,
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-        },
-      ],
-    });
-  }, [data]);
-
-  const options: ChartOptions<'line'> = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          font: { size: 12 },
-        },
-      },
-      title: {
-        display: false,
-      },
-      tooltip: {
-        callbacks: {
-          label: (ctx) => `${ctx.parsed.y}%`,
-        },
-      },
-    },
-    scales: {
-      x: {
-        grid: {
-          display: false,
-        },
-      },
-      y: {
-        beginAtZero: true,
-        max: 100,
-        ticks: {
-          callback: (value) => `${value}%`,
-        },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)',
-        },
-      },
-    },
   };
 
+  if (!data.length) {
+    return <div className='flex h-64 items-center justify-center text-gray-500'>No customer segment data available</div>;
+  }
+
   return (
-    <div className="h-64 w-full bg-white rounded-xl shadow p-4">
-      <Line data={chartData} options={options} />
+    <div className='h-64 w-full'>
+      <Pie data={chartData} options={options} />
     </div>
   );
 };
 
-export default CustomerRetentionChart;
+export default CustomerSegmentPie;
