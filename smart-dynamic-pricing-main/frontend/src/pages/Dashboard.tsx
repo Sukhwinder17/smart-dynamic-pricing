@@ -234,7 +234,7 @@ const Dashboard: React.FC = () => {
       <div className="container mx-auto p-4 space-y-6">
         <Card>
           <h2 className="text-lg font-semibold mb-2">Train Pricing Model with Your Dataset</h2>
-          <p className="text-sm text-gray-600 mb-3">CSV columns: demand, stock, season, previous_sales, and price or recommended_price. Optional: product_name, competitor_price. Minimum 5 valid rows.</p>
+          <p className="text-sm text-gray-600 mb-3">CSV columns: demand, stock, season, previous_sales, and price or recommended_price. Optional: product_name, competitor_price. Minimum 5 valid rows. <a className="text-blue-600 underline" href="https://raw.githubusercontent.com/Sukhwinder17/smart-dynamic-pricing/main/backend/sample_pricing_dataset.csv">Download sample CSV</a>.</p>
           <div className="flex flex-col sm:flex-row gap-3">
             <input type="file" accept=".csv,text/csv" onChange={(e) => setDatasetFile(e.target.files?.[0] || null)} className="text-sm" />
             <Button onClick={handleDatasetUpload} disabled={datasetBusy || !datasetFile} variant="primary">
@@ -273,7 +273,7 @@ const Dashboard: React.FC = () => {
         <Card>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-lg font-semibold">AI Training</h2>
+              <h2 className="text-lg font-semibold">Experimental DQN Simulation (Optional)</h2>
               {trainingStatus.isTraining ? (
                 <p className="text-sm text-gray-600">
                   Episode {trainingStatus.currentEpisode} /{' '}
