@@ -454,7 +454,19 @@ def recommend_price():
         if 'competitor_price' in dataset_summary['features']:
             row['competitor_price'] = float(data.get('competitor_price', pricing_dataset['competitor_price'].median()))
         prediction = max(0.01, float(pricing_model.predict(pd.DataFrame([row]))[0]))
-        return jsonify({"success": True, "recommended_price": round(prediction, 2), "currency": "same as dataset"})
+        current_price = data.get('current_price')
+        action = "Price estimate"
+        if current_price not in (None, ''):
+            current_price = float(current_price)
+            action = "Increase Price" if prediction > current_price * 1.03 else ("Decrease Price" if prediction < current_price * 0.97 else "Maintain Price")
+        return jsonify({
+            "success": True,
+            "product_name": str(data.get('product_name', 'Product')),
+            "current_price": current_price,
+            "recommended_price": round(prediction, 2),
+            "recommendation": action,
+            "currency": "same as dataset"
+        })
     except (TypeError, ValueError) as exc:
         return jsonify({"success": False, "message": "Feature values must be valid numbers."}), 400
 
