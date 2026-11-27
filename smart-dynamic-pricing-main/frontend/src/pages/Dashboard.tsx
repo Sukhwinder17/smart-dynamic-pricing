@@ -80,6 +80,21 @@ const Dashboard: React.FC = () => {
   const [datasetMessage, setDatasetMessage] = useState('')
   const [datasetError, setDatasetError] = useState('')
   const [uploadedProducts, setUploadedProducts] = useState<any[]>([])
+  const [priceFeatures, setPriceFeatures] = useState({ demand: '50', stock: '100', season: 'Summer', previous_sales: '40', competitor_price: '' })
+  const [pricePrediction, setPricePrediction] = useState<number | null>(null)
+  const [pricePredictionError, setPricePredictionError] = useState('')
+
+  const handleRecommendPrice = async () => {
+    setPricePredictionError(''); setPricePrediction(null)
+    try {
+      const payload: any = { demand: Number(priceFeatures.demand), stock: Number(priceFeatures.stock), season: priceFeatures.season, previous_sales: Number(priceFeatures.previous_sales) }
+      if (priceFeatures.competitor_price.trim()) payload.competitor_price = Number(priceFeatures.competitor_price)
+      const result = await apiClient.recommendPrice(payload)
+      setPricePrediction(Number(result.recommended_price))
+    } catch (err: any) {
+      setPricePredictionError(err?.response?.data?.message || 'Could not predict price. Upload and train a CSV first.')
+    }
+  }
 
   const handleDatasetUpload = async () => {
     if (!datasetFile) { setDatasetError('Choose a CSV file first.'); return }
@@ -228,6 +243,21 @@ const Dashboard: React.FC = () => {
           </div>
           {datasetError && <p className="mt-3 text-sm text-red-600">{datasetError}</p>}
           {datasetMessage && <p className="mt-3 text-sm text-green-700">{datasetMessage}</p>}
+          <div className="mt-5 border-t pt-4">
+            <h3 className="font-semibold mb-3">Get a price recommendation</h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+              <label className="text-xs text-gray-600">Demand<input type="number" min="0" value={priceFeatures.demand} onChange={(e) => setPriceFeatures({...priceFeatures, demand: e.target.value})} className="mt-1 w-full border rounded p-2 text-sm" /></label>
+              <label className="text-xs text-gray-600">Stock<input type="number" min="0" value={priceFeatures.stock} onChange={(e) => setPriceFeatures({...priceFeatures, stock: e.target.value})} className="mt-1 w-full border rounded p-2 text-sm" /></label>
+              <label className="text-xs text-gray-600">Season<input value={priceFeatures.season} onChange={(e) => setPriceFeatures({...priceFeatures, season: e.target.value})} className="mt-1 w-full border rounded p-2 text-sm" /></label>
+              <label className="text-xs text-gray-600">Previous sales<input type="number" min="0" value={priceFeatures.previous_sales} onChange={(e) => setPriceFeatures({...priceFeatures, previous_sales: e.target.value})} className="mt-1 w-full border rounded p-2 text-sm" /></label>
+              <label className="text-xs text-gray-600">Competitor price (optional)<input type="number" min="0" value={priceFeatures.competitor_price} onChange={(e) => setPriceFeatures({...priceFeatures, competitor_price: e.target.value})} className="mt-1 w-full border rounded p-2 text-sm" /></label>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <Button onClick={handleRecommendPrice} variant="secondary">Predict Recommended Price</Button>
+              {pricePrediction !== null && <span className="font-semibold text-green-700">Recommended price: {pricePrediction.toFixed(2)} (dataset currency)</span>}
+            </div>
+            {pricePredictionError && <p className="mt-2 text-sm text-red-600">{pricePredictionError}</p>}
+          </div>
           {uploadedProducts.length > 0 && (
             <div className="mt-4 overflow-x-auto">
               <table className="min-w-full text-sm">
