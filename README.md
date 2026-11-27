@@ -31,7 +31,7 @@ Optional columns:
 - `price` (current price shown beside the recommendation)
 - `competitor_price`
 
-A synthetic example file is included at [backend/sample_pricing_dataset.csv](backend/sample_pricing_dataset.csv). It is for testing only, not real business data.
+A synthetic example file is included at [backend/sample_pricing_dataset.csv](backend/sample_pricing_dataset.csv). It is for testing only, not real business data. Uploaded CSV data and the fitted model are saved under `backend/uploads/` on the machine running Flask (this folder is git-ignored), and are restored after a backend restart.
 
 ## Windows setup
 
