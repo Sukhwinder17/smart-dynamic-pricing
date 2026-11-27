@@ -5,7 +5,9 @@ import numpy as np
 import random
 import time
 import threading
-import io
+import os
+import json
+import joblib
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor
@@ -54,6 +56,39 @@ pricing_dataset = None
 dataset_products = []
 pricing_model = None
 dataset_summary = {}
+
+DATA_DIR = os.path.join(os.path.dirname(__file__), 'uploads')
+DATASET_PATH = os.path.join(DATA_DIR, 'pricing_dataset.csv')
+MODEL_PATH = os.path.join(DATA_DIR, 'pricing_model.joblib')
+SUMMARY_PATH = os.path.join(DATA_DIR, 'dataset_summary.json')
+
+def _restore_uploaded_model():
+    global pricing_dataset, dataset_products, pricing_model, dataset_summary
+    if not (os.path.exists(DATASET_PATH) and os.path.exists(MODEL_PATH)):
+        return
+    try:
+        pricing_dataset = pd.read_csv(DATASET_PATH)
+        pricing_model = joblib.load(MODEL_PATH)
+        if os.path.exists(SUMMARY_PATH):
+            with open(SUMMARY_PATH, 'r', encoding='utf-8') as summary_file:
+                dataset_summary = json.load(summary_file)
+        features = dataset_summary.get('features', ['demand', 'stock', 'season', 'previous_sales'])
+        predictions = pricing_model.predict(pricing_dataset[features])
+        names = pricing_dataset['product_name'] if 'product_name' in pricing_dataset else [f'Product {i + 1}' for i in range(len(pricing_dataset))]
+        prices = pricing_dataset['price'] if 'price' in pricing_dataset else pricing_dataset['target_price']
+        dataset_products = []
+        for name, current, stock, predicted in zip(names, prices, pricing_dataset['stock'], predictions):
+            current = float(current) if pd.notna(current) else float(predicted)
+            predicted = max(0.01, float(predicted))
+            dataset_products.append({
+                'name': str(name), 'current_price': round(current, 2),
+                'recommended_price': round(predicted, 2), 'stock': int(stock),
+                'recommendation': 'Increase Price' if predicted > current * 1.03 else ('Decrease Price' if predicted < current * 0.97 else 'Maintain Price')
+            })
+    except Exception as exc:
+        print('Could not restore saved pricing dataset/model:', exc)
+
+_restore_uploaded_model()
 
 
 # ─── Core Training Loop ───────────────────────────────────────────────────────
@@ -217,6 +252,9 @@ def generate_sample_data():
     dataset_products = []
     pricing_model = None
     dataset_summary = {}
+    for saved_path in (DATASET_PATH, MODEL_PATH, SUMMARY_PATH):
+        if os.path.exists(saved_path):
+            os.remove(saved_path)
     env = MarketEnvironment(num_products=5, num_customer_segments=3, time_periods=24, competitors=2)
     return jsonify({"products": env.get_products()})
 
@@ -364,9 +402,6 @@ def upload_dataset():
             "recommendation": "Increase Price" if recommended > current * 1.03 else ("Decrease Price" if recommended < current * 0.97 else "Maintain Price")
         })
 
-    pricing_dataset = normalized
-    dataset_products = built_products
-    pricing_model = model
     dataset_summary = {
         "rows_received": int(len(df)),
         "rows_used": int(len(normalized)),
@@ -375,9 +410,21 @@ def upload_dataset():
         "validation_mae": validation_mae,
         "validation_r2": validation_r2
     }
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+        normalized.to_csv(DATASET_PATH, index=False)
+        joblib.dump(model, MODEL_PATH)
+        with open(SUMMARY_PATH, 'w', encoding='utf-8') as summary_file:
+            json.dump(dataset_summary, summary_file)
+    except Exception as exc:
+        return jsonify({"success": False, "message": "Model trained but could not save it: " + str(exc)}), 500
+
+    pricing_dataset = normalized
+    dataset_products = built_products
+    pricing_model = model
     return jsonify({
         "success": True,
-        "message": "CSV cleaned and regression model trained.",
+        "message": "CSV cleaned and regression model trained; model saved locally.",
         "summary": dataset_summary,
         "products": built_products[:100]
     })
