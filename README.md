@@ -1,37 +1,56 @@
-# Smart Dynamic Pricing System
+# AI-Based Dynamic Pricing Website for E-Commerce
 
-AI-powered dynamic pricing dashboard using a Flask API, TensorFlow DQN agent, and React.
+A web prototype for e-commerce price recommendations. It uses a **Random Forest regression model** trained on historical pricing data uploaded as CSV, with a Flask API and React dashboard.
 
-## Project layout
+## Features
 
-The repository contains the backend at `backend/` and the runnable React app at `smart-dynamic-pricing-main/frontend/`.
+- Upload and validate historical pricing CSV data
+- Clean missing/invalid rows and preprocess seasonal categories
+- Train a regression model to estimate a target/recommended price
+- Evaluate the model with validation MAE and R² when the dataset is large enough
+- View current and recommended prices for imported products
+- Enter demand, stock, season and previous sales to predict a price for a single product
+- Dashboard charts for product performance, customer segments, demand/revenue and pricing trends
+- Optional simulated DQN training environment retained for experimentation; it is separate from the uploaded-data regression workflow
+
+## Dataset upload
+
+Use the dashboard's **Upload CSV & Train** area. The CSV needs at least 5 valid rows and should contain:
+
+Required columns:
+- `demand`
+- `stock`
+- `season`
+- `previous_sales`
+- `recommended_price` or `target_price` (the target the model learns)
+
+If no target column is present, `price` is used as the target. Common aliases such as `quantity_sold`, `inventory`, `historical_sales`, `current_price`, and `optimal_price` are accepted.
+
+Optional columns:
+- `product_name`
+- `price` (current price shown beside the recommendation)
+- `competitor_price`
+
+A synthetic example file is included at [backend/sample_pricing_dataset.csv](backend/sample_pricing_dataset.csv). It is for testing only, not real business data.
 
 ## Windows setup
 
-Requirements:
-- Python 3.10 (TensorFlow 2.11 is not compatible with newer Python versions such as 3.11/3.12)
-- Node.js 18 LTS and npm
+Requirements: Python 3.10, Node.js 18 LTS, and npm.
 
-### 1. Start the backend
-
-Open Command Prompt and run:
+### Backend — first CMD window
 
 ```cmd
 cd /d "%USERPROFILE%\Downloads\smart-dynamic-pricing-main\backend"
-py -3.10 -m venv .venv
+if not exist .venv\Scripts\python.exe py -3.10 -m venv .venv
 .venv\Scripts\activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 python enhanced_api.py
 ```
 
-The API runs at `http://localhost:5000`. Keep this terminal open.
+Backend API: http://localhost:5000/api
 
-If you already created the virtual environment, skip the `py -3.10 -m venv .venv` line. Activate it and install requirements again if needed.
-
-### 2. Start the frontend
-
-Open a **second** Command Prompt window:
+### Frontend — second CMD window
 
 ```cmd
 cd /d "%USERPROFILE%\Downloads\smart-dynamic-pricing-main\smart-dynamic-pricing-main\frontend"
@@ -39,24 +58,10 @@ npm install
 npm start
 ```
 
-The dashboard opens at `http://localhost:3000`. Keep this terminal open too.
+Dashboard: http://localhost:3000
 
-The frontend's API client defaults to `http://localhost:5000/api`, so no environment file is required for local development.
+Keep both terminals open. Upload a CSV in the dashboard to train the regression model before using the single-product price predictor.
 
-## Troubleshooting
+## Main technologies
 
-- If `py -3.10` is not found, install Python 3.10 and enable the Python Launcher.
-- If the frontend says port 3000 is busy, accept the prompt to use another port.
-- If the backend reports a missing Python package, make sure the backend virtual environment is activated and run `pip install -r requirements.txt` from the backend folder.
-- Do not run `npm install` from the repository root; run it inside `smart-dynamic-pricing-main/frontend`.
-
-## Features
-
-- Dueling Double DQN pricing agent
-- Simulated products, customer segments, competitors, and time-of-day demand
-- Flask endpoints for training, products, segments, pricing curves, and baseline comparisons
-- React dashboard with charts and training controls
-
-## License
-
-MIT License. See [LICENSE](LICENSE).
+Python, Flask, pandas, NumPy, scikit-learn, React, TypeScript, Chart.js.
